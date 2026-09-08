@@ -1,17 +1,22 @@
 import { UserRepository } from "../../infrastructure/repositories/UserRepository";
-import { AuthService } from "../../domain/services/AuthService";
+import { AuthService } from "../../domain/Services/AuthService";
+import { ApiResult, errorResponse, successResponse } from "../../interfaces/responses/ApiResponse";
+import { PublicUser } from "../../domain/entities/User";
+import { LoginRequestDTO } from "../../interfaces/dtos/LoginRequestDTO";
 
 export class LoginUserUseCase {
   private userRepo = new UserRepository();
   private authService = new AuthService();
 
-  async execute(email: string, password: string) {
-    const user = await this.userRepo.findByEmail(email);
-    if (!user) return { status: "error", message: "Usuario no encontrado", data: null };
+  async execute(input: LoginRequestDTO): Promise<ApiResult<{ token: string; user: PublicUser }>> {
+    if (!input?.usuario?.trim() || !input.password) return errorResponse("Usuario y password son obligatorios", 400);
 
-    const result = await this.authService.validateUser(user, password);
-    if (!result) return { status: "error", message: "Credenciales incorrectas", data: null };
+    const user = await this.userRepo.findByUsuario(input.usuario.trim().toLowerCase());
+    if (!user) return errorResponse("Credenciales incorrectas", 401);
 
-    return { status: "success", message: "Login exitoso", data: result };
+    const result = await this.authService.validateUser(user, input.password);
+    if (!result) return errorResponse("Credenciales incorrectas", 401);
+
+    return successResponse("Login exitoso", result);
   }
 }
