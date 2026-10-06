@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { GetProfileUseCase } from "../../application/use-cases/GetProfileUseCase";
 import { LoginUserUseCase } from "../../application/use-cases/LoginUserUseCase";
 import { RegisterUserUseCase } from "../../application/use-cases/RegisterUserUseCase";
+import { ProfilePhotoUseCase } from "../../application/use-cases/ProfilePhotoUseCase";
 import { LoginRequestDTO } from "../dtos/LoginRequestDTO";
 import { RegisterRequestDTO } from "../dtos/RegisterRequestDTO";
 import { errorResponse } from "../responses/ApiResponse";
@@ -35,6 +36,18 @@ export class AuthController {
       return res.status(result.statusCode).json(result.body);
     } catch {
       const response = errorResponse("No fue posible obtener el perfil", 500);
+      return res.status(response.statusCode).json(response.body);
+    }
+  }
+
+  async updatePhoto(req: Request, res: Response) {
+    try {
+      const userId = req.authUser!.id;
+      const foto = (req as Request & { file?: { buffer: Buffer } }).file?.buffer as Buffer;
+      const result = await new ProfilePhotoUseCase().execute(userId, foto);
+      return res.status(result.statusCode).json(result.body);
+    } catch {
+      const response = errorResponse("No fue posible actualizar la foto de perfil", 500);
       return res.status(response.statusCode).json(response.body);
     }
   }

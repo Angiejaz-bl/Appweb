@@ -30,10 +30,17 @@ export class UserRepository {
 
   async findPublicById(id: number): Promise<PublicUser | undefined> {
     const result = await pool.query<PublicUser>(
-      "SELECT id, nombre, apellido, usuario, correo FROM users WHERE id = $1",
+      "SELECT id, nombre, apellido, usuario, correo, foto FROM users WHERE id = $1",
       [id],
     );
     return result.rows[0];
+  }
+
+  async updateFoto(id: number, foto: Buffer): Promise<void> {
+    await pool.query(
+      "UPDATE users SET foto = $1 WHERE id = $2",
+      [foto, id],
+    );
   }
 
   isUniqueConstraintError(error: unknown): boolean {

@@ -6,6 +6,7 @@ export interface User {
   correo: string;
   password: string;
   created_at?: Date;
+  foto?: Buffer;
 }
 
 export interface CreateUserInput {
@@ -16,4 +17,7 @@ export interface CreateUserInput {
   password: string;
 }
 
-export type PublicUser = Pick<User, "id" | "nombre" | "apellido" | "usuario" | "correo">;
+export type PublicUser = Pick<
+  User,
+  "id" | "nombre" | "apellido" | "usuario" | "correo" | "foto"
+>;
