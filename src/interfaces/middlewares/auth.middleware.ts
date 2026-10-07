@@ -22,8 +22,6 @@ export const authenticateToken = (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("AUTH MIDDLEWARE EJECUTADO");
-
   const authorization = req.headers.authorization;
 
   const token = authorization?.startsWith("Bearer ")
@@ -31,8 +29,6 @@ export const authenticateToken = (
     : undefined;
 
   if (!token) {
-    console.log("JWT: NO SE RECIBIÓ TOKEN");
-
     const response = errorResponse(
       "Token de autenticación requerido",
       401
@@ -41,26 +37,10 @@ export const authenticateToken = (
     return res.status(response.statusCode).json(response.body);
   }
 
-  console.log("JWT: TOKEN RECIBIDO");
-
   try {
     const payload = jwt.verify(token, config.jwt.secret);
 
-    console.log("JWT PAYLOAD:", payload);
-
-    if (typeof payload === "object" && payload !== null) {
-      console.log("JWT ID:", payload.id);
-      console.log("JWT ID TYPE:", typeof payload.id);
-      console.log("JWT USUARIO:", payload.usuario);
-      console.log("JWT CORREO:", payload.correo);
-    }
-
-    if (
-      typeof payload === "string" ||
-      typeof payload.id !== "number"
-    ) {
-      console.log("JWT: ID INVÁLIDO");
-
+    if (typeof payload === "string" || !payload.id) {
       const response = errorResponse(
         "Token de autenticación inválido",
         401
@@ -69,14 +49,24 @@ export const authenticateToken = (
       return res.status(response.statusCode).json(response.body);
     }
 
-    req.authUser = payload as TokenPayload;
+    const id = Number(payload.id);
 
-    console.log("JWT: AUTENTICACIÓN CORRECTA");
+    if (!Number.isInteger(id)) {
+      const response = errorResponse(
+        "Token de autenticación inválido",
+        401
+      );
+
+      return res.status(response.statusCode).json(response.body);
+    }
+
+    req.authUser = {
+      ...payload,
+      id,
+    } as TokenPayload;
 
     return next();
-  } catch (error) {
-    console.log("JWT ERROR:", error);
-
+  } catch {
     const response = errorResponse(
       "Token de autenticación inválido o expirado",
       401
