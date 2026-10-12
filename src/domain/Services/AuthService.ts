@@ -8,10 +8,21 @@ export class AuthService {
     return bcrypt.hash(password, 12);
   }
 
-  generateToken(user: Pick<User, "id" | "correo" | "usuario">): string {
-    return jwt.sign({ id: user.id, correo: user.correo, usuario: user.usuario }, config.jwt.secret, {
-      expiresIn: config.jwt.expires,
-    });
+  generateToken(
+    user: Pick<User, "id" | "correo" | "usuario" | "rol">
+  ): string {
+    return jwt.sign(
+      {
+        id: user.id,
+        correo: user.correo,
+        usuario: user.usuario,
+        rol: user.rol,
+      },
+      config.jwt.secret,
+      {
+        expiresIn: config.jwt.expires,
+      }
+    );
   }
 
   toPublicUser(user: User): PublicUser {
@@ -19,10 +30,17 @@ export class AuthService {
     return publicUser;
   }
 
-  async validateUser(user: User, password: string): Promise<{ token: string; user: PublicUser } | null> {
+  async validateUser(
+    user: User,
+    password: string
+  ): Promise<{ token: string; user: PublicUser } | null> {
     const isValid = await bcrypt.compare(password, user.password);
+
     if (!isValid) return null;
 
-    return { token: this.generateToken(user), user: this.toPublicUser(user) };
+    return {
+      token: this.generateToken(user),
+      user: this.toPublicUser(user),
+    };
   }
 }

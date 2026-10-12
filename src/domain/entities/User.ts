@@ -1,3 +1,5 @@
+export type UserRole = "CENSISTA" | "ADMINISTRADOR";
+
 export interface User {
   id: number;
   nombre: string;
@@ -5,6 +7,7 @@ export interface User {
   usuario: string;
   correo: string;
   password: string;
+  rol: UserRole;
   created_at?: Date;
   foto?: Buffer;
 }
@@ -19,5 +22,5 @@ export interface CreateUserInput {
 
 export type PublicUser = Pick<
   User,
-  "id" | "nombre" | "apellido" | "usuario" | "correo" | "foto"
+  "id" | "nombre" | "apellido" | "usuario" | "correo" | "rol" | "foto"
 >;

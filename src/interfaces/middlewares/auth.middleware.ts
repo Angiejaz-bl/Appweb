@@ -1,12 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { config } from "../../infrastructure/config/config";
+import { UserRole } from "../../domain/entities/User";
 import { errorResponse } from "../responses/ApiResponse";
 
 export interface TokenPayload extends JwtPayload {
   id: number;
   correo: string;
   usuario: string;
+  rol: UserRole;
 }
 
 declare global {
@@ -33,19 +35,22 @@ export const authenticateToken = (
       "Token de autenticación requerido",
       401
     );
-
     return res.status(response.statusCode).json(response.body);
   }
 
   try {
     const payload = jwt.verify(token, config.jwt.secret);
 
-    if (typeof payload === "string" || !payload.id) {
+    if (
+      typeof payload === "string" ||
+      !payload.id ||
+      (payload.rol !== "CENSISTA" &&
+        payload.rol !== "ADMINISTRADOR")
+    ) {
       const response = errorResponse(
         "Token de autenticación inválido",
         401
       );
-
       return res.status(response.statusCode).json(response.body);
     }
 
@@ -56,13 +61,13 @@ export const authenticateToken = (
         "Token de autenticación inválido",
         401
       );
-
       return res.status(response.statusCode).json(response.body);
     }
 
     req.authUser = {
       ...payload,
       id,
+      rol: payload.rol,
     } as TokenPayload;
 
     return next();
@@ -71,7 +76,6 @@ export const authenticateToken = (
       "Token de autenticación inválido o expirado",
       401
     );
-
     return res.status(response.statusCode).json(response.body);
   }
 };
