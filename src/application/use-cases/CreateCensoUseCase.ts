@@ -29,6 +29,24 @@ export class CreateCensoUseCase {
       throw new Error("La cantidad de televisiones no puede ser negativa");
     }
 
+    if (
+      typeof input.latitud !== "number" ||
+      !Number.isFinite(input.latitud) ||
+      input.latitud < -90 ||
+      input.latitud > 90
+    ) {
+      throw new Error("La latitud no es válida");
+    }
+
+    if (
+      typeof input.longitud !== "number" ||
+      !Number.isFinite(input.longitud) ||
+      input.longitud < -180 ||
+      input.longitud > 180
+    ) {
+      throw new Error("La longitud no es válida");
+    }
+
     return this.censoRepository.crear({
       ...input,
       nombre: input.nombre.trim(),

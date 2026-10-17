@@ -7,8 +7,14 @@ import { errorResponse } from "../responses/ApiResponse";
 export class CensoController {
   async crear(req: Request, res: Response) {
     try {
-      const { nombre, apellido, total_miembros, cantidad_televisiones } =
-        req.body ?? {};
+      const {
+        nombre,
+        apellido,
+        total_miembros,
+        cantidad_televisiones,
+        latitud,
+        longitud,
+      } = req.body ?? {};
 
       const censo = await new CreateCensoUseCase().execute(
         {
@@ -16,6 +22,8 @@ export class CensoController {
           apellido,
           total_miembros,
           cantidad_televisiones,
+          latitud,
+          longitud,
         },
         req.authUser!.id,
       );
