@@ -1,10 +1,11 @@
 import { UserRepository } from "../../infrastructure/repositories/UserRepository";
+import { UserId } from "../../domain/entities/User";
 import { ApiResult, errorResponse, successResponse } from "../../interfaces/responses/ApiResponse";
 
 export class ProfilePhotoUseCase {
   private userRepo = new UserRepository();
 
-  async execute(userId: number, foto: Buffer): Promise<ApiResult<null>> {
+  async execute(userId: UserId, foto: Buffer): Promise<ApiResult<null>> {
     if (!foto || foto.length === 0) {
       return errorResponse("La foto es obligatoria", 400);
     }

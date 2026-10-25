@@ -1,3 +1,24 @@
 node_modules/
 dist/
 .env
+.env.*
+!.env.example
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+
+# Local credentials and secret files
+.aws/
+credentials
+credentials.*
+*_credentials.*
+secrets/
+secrets.*
+*.secret

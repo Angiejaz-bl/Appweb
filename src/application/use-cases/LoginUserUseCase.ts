@@ -5,8 +5,10 @@ import { PublicUser } from "../../domain/entities/User";
 import { LoginRequestDTO } from "../../interfaces/dtos/LoginRequestDTO";
 
 export class LoginUserUseCase {
-  private userRepo = new UserRepository();
-  private authService = new AuthService();
+  constructor(
+    private readonly userRepo = new UserRepository(),
+    private readonly authService = new AuthService(),
+  ) {}
 
   async execute(input: LoginRequestDTO): Promise<ApiResult<{ token: string; user: PublicUser }>> {
     if (!input?.usuario?.trim() || !input.password) return errorResponse("Usuario y password son obligatorios", 400);
@@ -16,6 +18,10 @@ export class LoginUserUseCase {
 
     const result = await this.authService.validateUser(user, input.password);
     if (!result) return errorResponse("Credenciales incorrectas", 401);
+    if (user.estado === "INACTIVA") return errorResponse("La cuenta está inactiva", 403);
+
+    const ultimoAcceso = await this.userRepo.updateLastAccess(user.id);
+    result.user.ultimoAcceso = ultimoAcceso;
 
     return successResponse("Login exitoso", result);
   }

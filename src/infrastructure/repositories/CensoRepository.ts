@@ -1,5 +1,6 @@
 
 import { pool } from "../database/connection";
+import { UserId } from "../../domain/entities/User";
 
 export interface Censo {
   id: number;
@@ -9,7 +10,7 @@ export interface Censo {
   cantidad_televisiones: number;
   latitud: number;
   longitud: number;
-  creado_por: number;
+  creado_por: UserId;
   fecha_registro: Date;
 }
 
@@ -20,7 +21,7 @@ export interface CrearCensoInput {
   cantidad_televisiones: number;
   latitud: number;
   longitud: number;
-  creado_por: number;
+  creado_por: UserId;
 }
 
 export class CensoRepository {
@@ -38,7 +39,7 @@ export class CensoRepository {
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id, nombre, apellido, total_miembros,
                 cantidad_televisiones, latitud, longitud,
-                creado_por, fecha_registro`,
+                creado_por::text AS creado_por, fecha_registro`,
       [
         input.nombre,
         input.apellido,
@@ -57,7 +58,7 @@ export class CensoRepository {
     const resultado = await pool.query<Censo>(
       `SELECT id, nombre, apellido, total_miembros,
               cantidad_televisiones, latitud, longitud,
-              creado_por, fecha_registro
+              creado_por::text AS creado_por, fecha_registro
        FROM censos
        ORDER BY id DESC`,
     );

@@ -3,13 +3,14 @@ import {
   CensoRepository,
   CrearCensoInput,
 } from "../../infrastructure/repositories/CensoRepository";
+import { UserId } from "../../domain/entities/User";
 
 export class CreateCensoUseCase {
   private readonly censoRepository = new CensoRepository();
 
   async execute(
     input: Omit<CrearCensoInput, "creado_por">,
-    usuarioId: number,
+    usuarioId: UserId,
   ) {
     if (!input.nombre?.trim() || !input.apellido?.trim()) {
       throw new Error("El nombre y el apellido son obligatorios");

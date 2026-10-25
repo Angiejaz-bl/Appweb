@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { config } from "../../infrastructure/config/config";
-import { UserRole } from "../../domain/entities/User";
+import { parseUserId, UserRole } from "../../domain/entities/User";
+import { UserRepository } from "../../infrastructure/repositories/UserRepository";
 import { errorResponse } from "../responses/ApiResponse";
 
 export interface TokenPayload extends JwtPayload {
-  id: number;
+  id: string;
   correo: string;
   usuario: string;
   rol: UserRole;
@@ -19,7 +20,7 @@ declare global {
   }
 }
 
-export const authenticateToken = (
+export const authenticateToken = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -38,27 +39,33 @@ export const authenticateToken = (
     return res.status(response.statusCode).json(response.body);
   }
 
+  let payload: string | JwtPayload;
   try {
-    const payload = jwt.verify(token, config.jwt.secret);
+    payload = jwt.verify(token, config.jwt.secret);
+  } catch {
+    const response = errorResponse("Token de autenticación inválido o expirado", 401);
+    return res.status(response.statusCode).json(response.body);
+  }
 
-    if (
-      typeof payload === "string" ||
-      !payload.id ||
-      (payload.rol !== "CENSISTA" &&
-        payload.rol !== "ADMINISTRADOR")
-    ) {
+  if (
+    typeof payload === "string" ||
+    (payload.rol !== "CENSISTA" && payload.rol !== "ADMINISTRADOR")
+  ) {
+    const response = errorResponse("Token de autenticación inválido", 401);
+    return res.status(response.statusCode).json(response.body);
+  }
+
+  const id = parseUserId(payload.id);
+  if (!id) {
+    const response = errorResponse("Token de autenticación inválido", 401);
+    return res.status(response.statusCode).json(response.body);
+  }
+
+  try {
+    const authorization = await new UserRepository().findAuthorizationById(id);
+    if (!authorization || authorization.estado !== "ACTIVA") {
       const response = errorResponse(
-        "Token de autenticación inválido",
-        401
-      );
-      return res.status(response.statusCode).json(response.body);
-    }
-
-    const id = Number(payload.id);
-
-    if (!Number.isInteger(id)) {
-      const response = errorResponse(
-        "Token de autenticación inválido",
+        "La cuenta no existe o está inactiva",
         401
       );
       return res.status(response.statusCode).json(response.body);
@@ -67,15 +74,11 @@ export const authenticateToken = (
     req.authUser = {
       ...payload,
       id,
-      rol: payload.rol,
+      rol: authorization.rol,
     } as TokenPayload;
-
     return next();
   } catch {
-    const response = errorResponse(
-      "Token de autenticación inválido o expirado",
-      401
-    );
+    const response = errorResponse("No fue posible validar el estado de la cuenta", 500);
     return res.status(response.statusCode).json(response.body);
   }
 };
